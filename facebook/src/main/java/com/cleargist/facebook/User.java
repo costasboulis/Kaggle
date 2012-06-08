@@ -5,7 +5,7 @@ import java.util.HashSet;
 
 
 
-public class User {
+public class User implements Comparable<User> {
 	private int userID;
 	private HashSet<Integer> friends;
 	
@@ -32,5 +32,16 @@ public class User {
 	
 	public HashSet<Integer> getFriends() {
 		return this.friends;
+	}
+	
+	public int compareTo(User us) {
+		double diff = this.getUserID() - us.getUserID();
+		if (diff > 0.0) {
+			return 1;
+		}
+		else if (diff < 0.0) {
+			return -1;
+		}
+		return 0;
 	}
 }

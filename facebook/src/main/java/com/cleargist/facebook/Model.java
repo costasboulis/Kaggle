@@ -76,7 +76,7 @@ public abstract class Model {
 		
 	}
 	
-	public void writePredictions(File outFile, File inFile) throws Exception {
+	public void writePredictions(File outFile, File inFile) {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(inFile));
 			BufferedWriter out = new BufferedWriter(new FileWriter(outFile));
@@ -89,23 +89,30 @@ public abstract class Model {
 			}
 			
 			String line = reader.readLine();
+			int numUsers = 0;
 			while ((line = reader.readLine()) != null) {
+				
+				if (numUsers % 100 == 0) {
+					logger.info("Processed " + numUsers + " users");
+				}
+				
 				int userID = Integer.parseInt(line);
 				
 				int[] friends = predict(userID);
 				
 				StringBuffer sb = new StringBuffer();
-				sb.append(userID);
-				for (int i = 0; i < friends.length; i ++) {
-					if (i == 0) {
-						sb.append(",");
+				sb.append(userID); sb.append(",");
+				if (friends != null) {
+					for (int i = 0; i < friends.length; i ++) {
+						if (i > 0) {
+							sb.append(" ");
+						}
+						sb.append(friends[i]);
 					}
-					else {
-						sb.append(" ");
-					}
-					sb.append(friends[i]);
 				}
 				sb.append(newline);
+				
+				
 				try {
 					out.write(sb.toString());
 					out.flush();
@@ -114,6 +121,8 @@ public abstract class Model {
 					logger.error("Error while writing to file \"" + outFile.getAbsolutePath() + "\"");
 					return;
 				}
+				
+				numUsers ++;
 			}
 			reader.close();
 			out.close();
@@ -210,4 +219,6 @@ public abstract class Model {
 	}
 	
 	public abstract int[] predict(int userID);
+	
+	public abstract void train(File trainingFile);
 }
