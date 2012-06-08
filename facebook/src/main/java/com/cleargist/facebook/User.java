@@ -1,20 +1,21 @@
 package com.cleargist.facebook;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+
+
 
 
 public class User {
 	private int userID;
-	private List<Integer> friends;
+	private HashSet<Integer> friends;
 	
-	public User(int userID, List<Integer> friends) {
+	public User(int userID, HashSet<Integer> friends) {
 		this.userID = userID;
 		this.friends = friends;
 	}
 	
 	public User() {
-		this.friends = new LinkedList<Integer>();
+		this.friends = new HashSet<Integer>();
 	}
 	
 	public void addFriend(int friendID) {
@@ -29,7 +30,7 @@ public class User {
 		return this.userID;
 	}
 	
-	public List<Integer> getFriends() {
+	public HashSet<Integer> getFriends() {
 		return this.friends;
 	}
 }

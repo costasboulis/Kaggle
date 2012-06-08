@@ -7,7 +7,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -36,13 +36,10 @@ public abstract class Model {
 			int sourceUserId = Integer.parseInt(users[0]);
 			int targetUserId = Integer.parseInt(users[1]);
 			int currentUserId = sourceUserId;
-			List<Integer> friends = new LinkedList<Integer>();
+			HashSet<Integer> friends = new HashSet<Integer>();
 			friends.add(targetUserId);
 			int numConnections = 1;
 			while ((line = reader.readLine()) != null) {
-				if (data.size() % 100000 == 0) {
-					logger.info("Read " + data.size() + " users");
-				}
 				users = line.split(",");
 				sourceUserId = Integer.parseInt(users[0]);
 				targetUserId = Integer.parseInt(users[1]);
@@ -50,7 +47,10 @@ public abstract class Model {
 				if (currentUserId != sourceUserId) {
 					User user = new User(currentUserId, friends);
 					data.add(user);
-					friends = new LinkedList<Integer>();
+					if (data.size() % 100000 == 0) {
+						logger.info("Read " + data.size() + " users");
+					}
+					friends = new HashSet<Integer>();
 					currentUserId = sourceUserId;
 				}
 				
@@ -129,8 +129,84 @@ public abstract class Model {
 		
 	}
 	
-	public float calculateMeanAveragePrecision(File referenceFile) {
-		return 0.0f;
+	private double calculatePrecisionAtLevelK(int[] predicted, HashSet<Integer> reference, int k) {
+		int positionK = k >= predicted.length ? predicted.length - 1 : k;
+		
+		double numFound = 0.0;
+		for (int i = 0; i <= positionK; i ++) {
+			boolean found = reference.contains(predicted[i]);
+			if (found) {
+				numFound += 1.0;
+			}
+		}
+		double precision = numFound > 0.0 ? numFound / (double)(positionK + 1.0) : 0.0;
+		
+		return precision;
+	}
+	
+	private double calculateAveragePrecision(int[] predicted, HashSet<Integer> reference) {
+		double sum = 0.0;
+		for (int k = 0; k < predicted.length; k ++) {
+			boolean found = reference.contains(predicted[k]);
+			if (found) {
+				sum += calculatePrecisionAtLevelK(predicted, reference, k);
+			}
+		}
+		
+		return sum / (double)reference.size();
+	}
+	
+	public double calculateMeanAveragePrecision(File referenceFile) {
+		double map = 0.0;
+		double numberOfUsers = 0.0;
+		int numberOfNonPredictions = 0;
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(referenceFile));
+			String line = reader.readLine();
+			while ((line = reader.readLine()) != null) {
+				String[] fields = line.split(",");
+				
+				int userID = Integer.parseInt(fields[0]);
+				if (fields.length < 2) {
+					// No reference data
+					numberOfUsers += 1.0;
+					continue;
+				}
+				
+				int[] predicted = predict(userID);
+				if (predicted == null) {
+					numberOfNonPredictions ++;
+					// average precision is zero
+				}
+				else {
+					String[] referenceFriends = fields[1].trim().split(" ");
+					HashSet<Integer> reference = new HashSet<Integer>();
+					for (int i = 0; i < referenceFriends.length; i ++) {
+						int ref = Integer.parseInt(referenceFriends[i]);
+						
+						reference.add(ref);
+					}
+					
+					double avgPrecision = calculateAveragePrecision(predicted, reference);
+					
+					map += avgPrecision;
+				}
+				
+				
+				numberOfUsers += 1.0;
+			}
+			reader.close();
+			
+			logger.info("Could not make predictions for " + numberOfNonPredictions + " users");
+			return map / numberOfUsers;
+		}
+		catch (FileNotFoundException ex) {
+			logger.error("No file \"" + referenceFile.getAbsolutePath() + "\"");
+		}
+		catch (IOException ex) {
+			logger.error("Error while reading from file \"" + referenceFile.getAbsolutePath() + "\"");
+		}
+		return 0.0;
 	}
 	
 	public abstract int[] predict(int userID);
