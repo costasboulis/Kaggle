@@ -6,7 +6,7 @@ public class ModelRunner {
 
 	public static void main(String[] args) {
 		String trainingData = "c:\\kaggle\\train.csv";
-		String testData = "c:\\kaggle\\test.csv";
+		String testData = "c:\\kaggle\\test_part3.csv";
 		String predictions = "c:\\kaggle\\predictions.csv";
 		
 		Model model = new JaccardModel();

@@ -220,5 +220,5 @@ public abstract class Model {
 	
 	public abstract int[] predict(int userID);
 	
-	public abstract void train(File trainingFile);
+	public abstract void train();
 }
