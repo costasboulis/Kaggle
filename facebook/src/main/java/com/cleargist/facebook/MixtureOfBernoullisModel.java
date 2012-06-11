@@ -56,8 +56,11 @@ public class MixtureOfBernoullisModel extends Model {
 		
 		// Calculate the sufficient statistics
 		File path = new File(SUFF_STATS_DIRECTORY);
+		if (!path.exists()) {
+			path.mkdir();
+		}
 		File[] listOfFiles = path.listFiles();
-		for (int i = 0; i < listOfFiles.length; i++) {
+		for (int i = 0; i < listOfFiles.length; i ++) {
 			if (listOfFiles[i].isFile())  {
 				listOfFiles[i].delete();
 			}
@@ -71,15 +74,16 @@ public class MixtureOfBernoullisModel extends Model {
 				break;
 			}
 			logger.info("Calculating sufficient statistics for chunk " + chunk);
-			calculateSufficientStatistics(startIndx, endIndx, isInitial);
+			calculateSufficientStatistics(startIndx, endIndx, path, isInitial);
 			startIndx = endIndx + 1;
 			endIndx = startIndx + numberOfUsersPerChunk;
 			chunk ++;
 		}
 		logger.info("Calculating sufficient statistics for chunk " + chunk);
-		calculateSufficientStatistics(startIndx, data.size(), isInitial);
+		calculateSufficientStatistics(startIndx, data.size(), path, isInitial);
 		
 		// Now merge the sufficient statistics
+		logger.info("Merging suff. stats");
 		listOfFiles = path.listFiles();
 		File mergedStatsFile = null;
 		if (listOfFiles[0].isFile())  {
@@ -100,11 +104,9 @@ public class MixtureOfBernoullisModel extends Model {
 	}
 	
 	public void train() {
-		logProb = new ArrayList<HashMap<Integer, Double>>(this.numberOfClusters);
-		logPriors = new ArrayList<Double>(this.numberOfClusters);
-		logProbUnseen = new ArrayList<Double>(this.numberOfClusters);
 		
 		logger.info("Initializing model");
+		this.random = new Random();
 		trainSingleIteration(true);
 		for (int iter = 1; iter < this.numberOfIterations; iter ++) {
 			logger.info("Iteration " + iter);
@@ -188,6 +190,7 @@ public class MixtureOfBernoullisModel extends Model {
 			lineStr = reader.readLine();
 			String[] fields = lineStr.split(" ");
 			double v = Double.parseDouble(fields[0]) + ss0[0];
+			sb.append(v);
 			for (int m = 1; m < this.numberOfClusters; m ++) {
 				v = Double.parseDouble(fields[m]) + ss0[m];
 				sb.append(" "); sb.append(v);
@@ -253,7 +256,7 @@ public class MixtureOfBernoullisModel extends Model {
 		localFile.renameTo(mergedStatsFile);
 	}
 	
-	private void calculateSufficientStatistics(int startIndex, int endIndex, boolean isInitial) {
+	private void calculateSufficientStatistics(int startIndex, int endIndex, File path, boolean isInitial) {
 		
 		initSufficientStats();
 		
@@ -293,7 +296,7 @@ public class MixtureOfBernoullisModel extends Model {
 		}
 		
 		// Now write the sufficient statistics
-		File localFile = new File("stats_" + startIndex + "_" + endIndex + ".txt");
+		File localFile = new File(path.getAbsolutePath() + "\\" + "stats_" + startIndex + "_" + endIndex + ".txt");
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(localFile));
 			bw.write(this.numberOfUsers + newline);
@@ -416,8 +419,8 @@ public class MixtureOfBernoullisModel extends Model {
 			lineStr = reader.readLine();
 			String[] fields = lineStr.split(" ");
 			
-			this.logPriors = new ArrayList<Double>();
-			this.logProbUnseen = new ArrayList<Double>();
+			this.logPriors = new ArrayList<Double>(this.numberOfClusters);
+			this.logProbUnseen = new ArrayList<Double>(this.numberOfClusters);
 			double[] ss0 = new double[this.numberOfClusters];
 			for (int m = 0; m < this.numberOfClusters; m ++) {
 				double v = 0.0;
@@ -443,7 +446,7 @@ public class MixtureOfBernoullisModel extends Model {
 			}
 			
 			// Estimate logProb
-			this.logProb = new ArrayList<HashMap<Integer, Double>>();
+			this.logProb = new ArrayList<HashMap<Integer, Double>>(this.numberOfClusters);
 			for (int m = 0; m < this.numberOfClusters; m ++) {
 				this.logProb.add(new HashMap<Integer, Double>());
 			}
@@ -533,7 +536,10 @@ public class MixtureOfBernoullisModel extends Model {
 		
 		List<AttributeObject> rankedList = new ArrayList<AttributeObject>(hm.size());
 		for (Map.Entry<Integer, Double> me : hm.entrySet()) {
-			rankedList.add(new AttributeObject(me.getKey(), me.getValue()));
+			int uId = me.getKey();
+			if (!user.getFriends().contains(uId)) {
+				rankedList.add(new AttributeObject(me.getKey(), me.getValue()));
+			}
 		}
 		Collections.sort(rankedList);
 		
