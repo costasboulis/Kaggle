@@ -14,7 +14,7 @@ public class ModelRunner {
 		*/
 		MixtureOfBernoullisModel model = new MixtureOfBernoullisModel();
 		model.setNumberOfClusters(10);
-		model.setNumberOfIterations(10);
+		model.setNumberOfIterations(5);
 		model.setNumberOfUsersPerChunk(100000);
 		
 		File dataFile = new File(trainingData);
