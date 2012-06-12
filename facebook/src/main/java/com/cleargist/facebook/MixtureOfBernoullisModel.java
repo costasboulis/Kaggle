@@ -70,12 +70,12 @@ public class MixtureOfBernoullisModel extends Model {
 		int endIndx = startIndx + numberOfUsersPerChunk;
 		int chunk = 0;
 		while (true) {
-			if (endIndx >= data.size()) {
+			if (endIndx > data.size()) {
 				break;
 			}
 			logger.info("Calculating sufficient statistics for chunk " + chunk);
 			calculateSufficientStatistics(startIndx, endIndx, path, isInitial);
-			startIndx = endIndx + 1;
+			startIndx = endIndx;
 			endIndx = startIndx + numberOfUsersPerChunk;
 			chunk ++;
 		}
@@ -259,14 +259,8 @@ public class MixtureOfBernoullisModel extends Model {
 	private void calculateSufficientStatistics(int startIndex, int endIndex, File path, boolean isInitial) {
 		
 		initSufficientStats();
-		
-		int numLines = 1;
+		double totLogProb = 0.0;
 		for (User user : data.subList(startIndex, endIndex)) {
-			
-			if (numLines % 1000 == 0) {
-				logger.info("Users processed read " + numLines);
-			}
-			
 			
 			// Now update the sufficient statistics
 			double[] probs = isInitial ? calculateInitialClusterPosteriors() : calculateClusterPosteriors(user);
@@ -293,12 +287,14 @@ public class MixtureOfBernoullisModel extends Model {
 			
 			this.numberOfUsers += 1.0;
 			
+			totLogProb += isInitial ? 0.0 : calculateLogProb(probs, user);
 		}
 		
 		// Now write the sufficient statistics
 		File localFile = new File(path.getAbsolutePath() + "\\" + "stats_" + startIndex + "_" + endIndex + ".txt");
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(localFile));
+			bw.write(totLogProb + newline);
 			bw.write(this.numberOfUsers + newline);
 			StringBuffer sb = new StringBuffer();
 			sb.append(ss0[0]);
@@ -402,6 +398,9 @@ public class MixtureOfBernoullisModel extends Model {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(mergedStatsFile));
 			String lineStr = reader.readLine();
+			double totLogProb = Double.parseDouble(lineStr);
+			logger.info("Log prob : " + totLogProb);
+			lineStr = reader.readLine();
 			this.numberOfUsers = 0.0;
 			try {
 				this.numberOfUsers = Double.parseDouble(lineStr);
@@ -500,6 +499,80 @@ public class MixtureOfBernoullisModel extends Model {
 			logger.error("Cannot read from file " + mergedStatsFile.getAbsolutePath());
 			System.exit(-1);
 		}
+		
+		// Now estimate prob(edge | cluster) - needed for the prediction
+		this.prob = new ArrayList<List<AttributeObject>>(this.numberOfClusters);
+		for (int m = 0; m < this.numberOfClusters; m ++) {
+			List<AttributeObject> l = new ArrayList<AttributeObject>(logProb.get(m).size());
+			for (Map.Entry<Integer, Double> me : logProb.get(m).entrySet()) {
+				l.add(new AttributeObject(me.getKey(), me.getValue()));
+			}
+			Collections.sort(l);
+			
+			int len = l.size() >= TOP_N ? TOP_N : l.size();
+			List<AttributeObject> topNList = new ArrayList<AttributeObject>(len);
+			for (AttributeObject attObj : l) {
+				topNList.add(attObj);
+				
+				if (topNList.size() >= TOP_N)  {
+					break;
+				}
+			}
+			
+			this.prob.add(topNList);
+		}
+	}
+	
+	private double calculateLogProb(double[] posteriors, User user) {
+		double totProb = 0.0;
+		double maxPosterior = 0.0;
+		int maxIndex = 0;
+		for (int m = 0; m < this.numberOfClusters; m ++) {
+			if (posteriors[m] > maxPosterior) {
+				maxPosterior = posteriors[m];
+				maxIndex = m;
+			}
+		}
+		
+		for (Integer indx : user.getFriends()) {
+			Double logV = logProb.get(maxIndex).get(indx);
+			if (logV == null) {
+				totProb += logProbUnseen.get(maxIndex);
+			}
+			else {
+				totProb += logV;
+			}
+		}
+		
+		return totProb;
+	}
+	
+	public void writeClusterMemberships(File memberships) {
+		BufferedWriter writer = null;
+		try {
+			writer = new BufferedWriter(new FileWriter(memberships));
+			for (User user : data) {
+				StringBuffer sb = new StringBuffer();
+				sb.append(user.getUserID());
+				double[] clusterProbs = calculateClusterPosteriors(user);
+				for (int m = 0; m < numberOfClusters; m ++) {
+					if (clusterProbs[m] == 0.0) {
+						continue;
+					}
+					
+					sb.append(" "); sb.append(m); sb.append(" "); sb.append(clusterProbs[m]);
+				}
+				sb.append(newline);
+				writer.write(sb.toString());
+				writer.flush();
+			}
+			writer.close();
+		}
+		catch (IOException ex) {
+			logger.error("Cannot write to file " + memberships.getAbsolutePath());
+			System.exit(-1);
+		}
+		
 		
 	}
 	

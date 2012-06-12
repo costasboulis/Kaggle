@@ -21,6 +21,7 @@ public class ModelRunner {
 		model.readData(dataFile);
 		model.train();
 		
+		model.writeClusterMemberships(new File("c:\\kaggle\\clusterMemberships.txt"));
 		model.writePredictions(new File(predictions), new File(testData));
 	}
 }
