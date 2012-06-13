@@ -31,7 +31,7 @@ public class MixtureOfBernoullisModel extends Model {
 	private int numberOfClusters;
 	private int numberOfIterations; 
 	private int numberOfUsersPerChunk;
-	private static double ALPHA = 1.0;
+	private static double ALPHA = 0.01;
 	private static double BETA = 1.0;
 	private static double UPPER_LOG_THRESHOLD = 10.0;
 	private static double LOWER_LOG_THRESHOLD = -10.0;
@@ -230,7 +230,7 @@ public class MixtureOfBernoullisModel extends Model {
 						sb.append(" "); sb.append(indx); sb.append(" "); sb.append(value);
 					}
 					else {
-						sb.append(" "); sb.append(indx); sb.append(" "); sb.append(value + v);
+						sb.append(" "); sb.append(indx); sb.append(" "); sb.append(value + val);
 					}
 				}
 				sb.append(newline);
@@ -271,10 +271,11 @@ public class MixtureOfBernoullisModel extends Model {
 			
 			// Now update the sufficient statistics
 			double[] probs = isInitial ? calculateInitialClusterPosteriors() : calculateClusterPosteriors(user);
-			for (int m = 0 ; m < ss1.size(); m ++) {
+			for (int m = 0 ; m < this.numberOfClusters; m ++) {
 				if (probs[m] == 0.0) {
 					continue;
 				}
+				
 				HashMap<Integer, Double> hm = ss1.get(m);
 				if (hm == null) {
 					hm = new HashMap<Integer, Double>();
@@ -289,6 +290,7 @@ public class MixtureOfBernoullisModel extends Model {
 						hm.put(indx, v + probs[m]);
 					}
 				}
+				
 				ss0[m] += probs[m];
 			}
 			
@@ -519,7 +521,7 @@ public class MixtureOfBernoullisModel extends Model {
 			int len = l.size() >= TOP_N ? TOP_N : l.size();
 			List<AttributeObject> topNList = new ArrayList<AttributeObject>(len);
 			for (AttributeObject attObj : l) {
-				topNList.add(attObj);
+				topNList.add(new AttributeObject(attObj.getUID(), Math.exp(attObj.getScore())));
 				
 				if (topNList.size() >= TOP_N)  {
 					break;
@@ -531,7 +533,7 @@ public class MixtureOfBernoullisModel extends Model {
 	}
 	
 	private double calculateLogProb(double[] posteriors, User user) {
-		double totProb = 0.0;
+		
 		double maxPosterior = 0.0;
 		int maxIndex = 0;
 		for (int m = 0; m < this.numberOfClusters; m ++) {
@@ -541,6 +543,7 @@ public class MixtureOfBernoullisModel extends Model {
 			}
 		}
 		
+		double totProb = 0.0;
 		for (Integer indx : user.getFriends()) {
 			Double logV = logProb.get(maxIndex).get(indx);
 			if (logV == null) {
@@ -636,6 +639,27 @@ public class MixtureOfBernoullisModel extends Model {
 		}
 		
 		return results;
+	}
+	
+	public static void main(String[] args) {
+		String trainingData = "c:\\kaggle\\train.csv";
+		String testData = "c:\\kaggle\\test.csv";
+		String predictions = "c:\\kaggle\\MixBernoullis.csv";
+
+		/*
+		Model model = new JaccardModel();
+		*/
+		MixtureOfBernoullisModel model = new MixtureOfBernoullisModel();
+		model.setNumberOfClusters(1);
+		model.setNumberOfIterations(1);
+		model.setNumberOfUsersPerChunk(100000);
+		
+		File dataFile = new File(trainingData);
+		model.readData(dataFile);
+		model.train();
+		
+//		model.writeClusterMemberships(new File("c:\\kaggle\\clusterMemberships.txt"));
+		model.writePredictions(new File(predictions), new File(testData));
 	}
 	
 }
