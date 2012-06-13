@@ -35,7 +35,7 @@ public class MixtureOfBernoullisModel extends Model {
 	private static double BETA = 1.0;
 	private static double UPPER_LOG_THRESHOLD = 10.0;
 	private static double LOWER_LOG_THRESHOLD = -10.0;
-	private static int TOP_N = 100;
+	private static int TOP_N = 20;
 	private static double SUM_CLUSTER_THRESHOLD = 0.98;  // If the sum_m{p(c|user)} is less than threshold do a normalization of cluster posteriors 
 	private static String SUFF_STATS_DIRECTORY = "C:\\kaggle\\MixBernoulliStats";
 	private Random random;
@@ -128,10 +128,14 @@ public class MixtureOfBernoullisModel extends Model {
 		
 		initSufficientStats();
 		
+		double chunkLogProb = 0.0;
+		double totLogProb = 0.0;
 		// Load in memory the statsFile
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(statsFile));
 			String lineStr = reader.readLine();
+			chunkLogProb = Double.parseDouble(lineStr);
+			lineStr = reader.readLine();
 			this.numberOfUsers = Double.parseDouble(lineStr);
 			lineStr = reader.readLine();
 			String[] fields = lineStr.split(" ");
@@ -183,8 +187,11 @@ public class MixtureOfBernoullisModel extends Model {
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(mergedStatsFile));
 			String lineStr = reader.readLine();
+			totLogProb = chunkLogProb + Double.parseDouble(lineStr);
+			lineStr = reader.readLine();
 			double mergedN = Double.parseDouble(lineStr) + this.numberOfUsers;
 			StringBuffer sb = new StringBuffer();
+			sb.append(totLogProb); sb.append(newline);
 			sb.append(mergedN); sb.append(newline);
 			
 			lineStr = reader.readLine();
@@ -622,6 +629,10 @@ public class MixtureOfBernoullisModel extends Model {
 		for (AttributeObject attObj : rankedList) {
 			results[k] = attObj.getUID();
 			k ++;
+			
+			if (k >= len) {
+				break;
+			}
 		}
 		
 		return results;
