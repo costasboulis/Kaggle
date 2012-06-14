@@ -9,7 +9,6 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// TODO : Compute sparse co-occurrence matrix 250K x 1.6M and store it in disk
 
 public class JaccardModel extends Model {
 	private Logger logger = LoggerFactory.getLogger(getClass());

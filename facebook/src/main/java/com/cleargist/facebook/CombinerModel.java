@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -109,13 +108,15 @@ public class CombinerModel extends Model {
 	public static void main(String[] args) {
 		String combinedSystem1 = "c:\\kaggle\\ReciprocalWithScorePredictions_061999.csv.gz";
 		String combinedSystem2 = "c:\\kaggle\\JaccardPredictions_014087.csv.gz";
-		double[] scores = {0.6199, 0.14087};
+		String combinedSystem3 = "c:\\kaggle\\FriendOfFriendsPredictions_019340.csv.gz";
+		double[] scores = {0.6199, 0.14087, 0.19340};
 		
-		File[] combinedSystems = new File[2];
+		File[] combinedSystems = new File[3];
 		combinedSystems[0] = new File(combinedSystem1);
 		combinedSystems[1] = new File(combinedSystem2);
+		combinedSystems[2] = new File(combinedSystem3);
 		String testData = "c:\\kaggle\\test.csv";
-		String predictions = "c:\\kaggle\\CombinedPredictions.csv";
+		String predictions = "c:\\kaggle\\CombinedPredictions_Jaccard_FOF_BackwardLinks.csv";
 		
 		CombinerModel model = new CombinerModel();
 		model.setCombinedSystems(combinedSystems, scores);

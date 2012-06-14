@@ -644,14 +644,12 @@ public class MixtureOfBernoullisModel extends Model {
 	public static void main(String[] args) {
 		String trainingData = "c:\\kaggle\\train.csv";
 		String testData = "c:\\kaggle\\test.csv";
-		String predictions = "c:\\kaggle\\MixBernoullis.csv";
+		String predictions = "c:\\kaggle\\MixBernoullis_trial_2.csv";
 
-		/*
-		Model model = new JaccardModel();
-		*/
+		
 		MixtureOfBernoullisModel model = new MixtureOfBernoullisModel();
-		model.setNumberOfClusters(1);
-		model.setNumberOfIterations(1);
+		model.setNumberOfClusters(10);
+		model.setNumberOfIterations(5);
 		model.setNumberOfUsersPerChunk(100000);
 		
 		File dataFile = new File(trainingData);
