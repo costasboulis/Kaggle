@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 public class InboundJaccardModel extends Model {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private HashMap<Integer, HashSet<Integer>> reverseIndex;
+	private HashMap<Integer, HashSet<Integer>> regularIndex;
 	private File dataFile;
 	
 	public void setDataFile(File dataFile) {
@@ -30,6 +31,7 @@ public class InboundJaccardModel extends Model {
 	public void train() {
 		logger.info("Beginning training");
 		this.reverseIndex = new HashMap<Integer, HashSet<Integer>>();
+		this.regularIndex = new HashMap<Integer, HashSet<Integer>>();
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(dataFile));
 			String line = reader.readLine();
@@ -45,6 +47,13 @@ public class InboundJaccardModel extends Model {
 					reverseIndex.put(targetUserId, l);
 				}
 				l.add(sourceUserId);
+				
+				HashSet<Integer> r = regularIndex.get(sourceUserId);
+				if (r == null) {
+					r = new HashSet<Integer>();
+					regularIndex.put(sourceUserId, r);
+				}
+				r.add(targetUserId);
 			}
 			reader.close();
 		}
@@ -90,12 +99,15 @@ public class InboundJaccardModel extends Model {
 		}
 		Collections.sort(topTargets);
 		
-		
+		source = regularIndex.get(userId);
 		List<Integer> l = new ArrayList<Integer>();
 		for (AttributeObject attObj : topTargets) {
 			int targetId = attObj.getUID();
 			
-			if (source.contains(targetId) || userId == targetId) {
+			if (source != null && source.contains(targetId)) {
+				continue;
+			}
+			if (userId == targetId) {
 				continue;
 			}
 			
