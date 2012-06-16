@@ -81,7 +81,7 @@ public class ReciprocalModel extends Model {
 			}
 		}
 		
-		int len = predictedFriends.size() > 10 ? 10 : predictedFriends.size();
+		int len = predictedFriends.size() > TOP_N_PREDICTED ? TOP_N_PREDICTED : predictedFriends.size();
 		int[] predicted = new int[len];
 		int k = 0;
 		for (Integer indx : predictedFriends) {

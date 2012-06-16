@@ -113,7 +113,7 @@ public class InboundJaccardModel extends Model {
 			
 			l.add(targetId);
 			
-			if (l.size() >= 10) {
+			if (l.size() >= TOP_N_PREDICTED) {
 				break;
 			}
 		}

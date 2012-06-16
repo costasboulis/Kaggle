@@ -21,10 +21,15 @@ public class CombinerModel extends Model {
 	private List<HashMap<Integer, List<Integer>>> systems;
 	private File[] combinedSystems;
 	private double[] systemScores;
+	private int length; // Length of the biggest list
 	
 	public void setCombinedSystems(File[] combined, double[] scores) {
 		this.combinedSystems = combined;
 		this.systemScores = scores;
+	}
+	
+	public void setLength(int length) {
+		this.length = length;
 	}
 	
 	public void train() {
@@ -70,7 +75,7 @@ public class CombinerModel extends Model {
 		int k = 0;
 		for (HashMap<Integer, List<Integer>> system : systems) {
 			List<Integer> friends = system.get(userID);
-			double rank = 10.0;
+			double rank = this.length;
 			for (Integer friend : friends) {
 				Double v = hm.get(friend);
 				double score = rank * systemScores[k];
@@ -106,9 +111,9 @@ public class CombinerModel extends Model {
 	}
 	
 	public static void main(String[] args) {
-		String combinedSystem1 = "c:\\kaggle\\ReciprocalWithScorePredictions_061999.csv.gz";
+		String combinedSystem1 = "c:\\kaggle\\ReciprocalWithScorePredictions.csv.gz";
 		String combinedSystem2 = "c:\\kaggle\\JaccardPredictions_014087.csv.gz";
-		String combinedSystem3 = "c:\\kaggle\\FriendOfFriendsPredictions_019340.csv.gz";
+		String combinedSystem3 = "c:\\kaggle\\FriendOfFriendsPredictions.csv.gz";
 		double[] scores = {0.6199, 0.14087, 0.19340};
 		
 		File[] combinedSystems = new File[3];
@@ -119,6 +124,7 @@ public class CombinerModel extends Model {
 		String predictions = "c:\\kaggle\\CombinedPredictions_Jaccard_FOF_BackwardLinks.csv";
 		
 		CombinerModel model = new CombinerModel();
+		model.setLength(50);
 		model.setCombinedSystems(combinedSystems, scores);
 		
 		model.train();

@@ -155,7 +155,7 @@ public class AdarModel extends Model {
 			
 			l.add(targetId);
 			
-			if (l.size() >= 10) {
+			if (l.size() >= TOP_N_PREDICTED) {
 				break;
 			}
 		}
@@ -192,7 +192,12 @@ public class AdarModel extends Model {
 	
 		model.train();
 	
-		model.writePredictions(new File(predictions), new File(testData));
+		File predictionsFile = new File(predictions);
+		File testDataFile = new File(testData);
+		model.writePredictions(predictionsFile, testDataFile);
+		
+		File predictionsTop10File = new File(predictions + "_top10.txt");
+		AdarModel.chooseTop10Predictions(predictionsFile, predictionsTop10File);
 	}
 	
 }

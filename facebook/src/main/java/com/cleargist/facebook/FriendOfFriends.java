@@ -96,7 +96,7 @@ public class FriendOfFriends extends Model {
 		}
 		Collections.sort(rankedList);
 		
-		int len = rankedList.size() > 10 ? 10 : rankedList.size();
+		int len = rankedList.size() > TOP_N_PREDICTED ? TOP_N_PREDICTED : rankedList.size();
 		int[] predicted = new int[len];
 		int k = 0;
 		for (AttributeObject attObj : rankedList) {

@@ -19,6 +19,7 @@ public abstract class Model {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	public static String newline = System.getProperty("line.separator");
 	protected List<User> data;
+	protected int TOP_N_PREDICTED = 50;
 	
 	/**
 	 * Reads data from file. Assumes that all target users of the same source user are written consecutively
@@ -216,6 +217,60 @@ public abstract class Model {
 			logger.error("Error while reading from file \"" + referenceFile.getAbsolutePath() + "\"");
 		}
 		return 0.0;
+	}
+	
+	/**
+	 * Given a test file wile with more than 10 predictions per line, it truncates the predictions to 10
+	 * @param inPredictions
+	 * @param outPredictions
+	 */
+	public static void chooseTop10Predictions(File inPredictions, File outPredictions) {
+		BufferedWriter out = null;
+		try {
+			out = new BufferedWriter(new FileWriter(outPredictions));
+		}
+		catch (Exception ex) {
+			System.err.println("Could not write to file \"" + outPredictions.getAbsolutePath() + "\"");
+			System.exit(-1);
+		}
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(inPredictions));
+			String line = reader.readLine();
+			while ((line = reader.readLine()) != null) {
+				String[] fields = line.split(",");
+				StringBuffer sb = new StringBuffer();
+				sb.append(fields[0]); sb.append(",");
+				int normLegth = fields.length - 1;
+				int len = normLegth > 10 ? 10 : normLegth;
+				for (int i = 1; i < len; i ++) {
+					if (i > 1) {
+						sb.append(" "); 
+					}
+					sb.append(fields[i]);
+				}
+				sb.append(newline);
+				
+				try {
+					out.write(sb.toString());
+					out.flush();
+				}
+				catch (Exception ex) {
+					System.err.println("Could not write to file \"" + outPredictions.getAbsolutePath() + "\"");
+					System.exit(-1);
+				}
+			}
+			reader.close();
+			out.close();
+		}
+		catch (FileNotFoundException ex) {
+			System.err.println("No file \"" + inPredictions.getAbsolutePath() + "\"");
+			System.exit(-1);
+		}
+		catch (IOException ex) {
+			System.err.println("Error while reading from file \"" + inPredictions.getAbsolutePath() + "\"");
+			System.exit(-1);
+		}
+		
 	}
 	
 	public abstract int[] predict(int userID);
