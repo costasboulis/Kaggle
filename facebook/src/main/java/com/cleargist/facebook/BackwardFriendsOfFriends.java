@@ -1,7 +1,5 @@
 package com.cleargist.facebook;
 
-
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -17,8 +15,12 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-public class InboundJaccardModel extends Model {
+/**
+ * A->B<-C => A->C
+ * @author kboulis
+ *
+ */
+public class BackwardFriendsOfFriends extends Model {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private HashMap<Integer, HashSet<Integer>> reverseIndex;
 	private HashMap<Integer, HashSet<Integer>> regularIndex;
@@ -79,61 +81,43 @@ public class InboundJaccardModel extends Model {
 	}
 	
 	public int[] predict(int userId) {
-		
-		HashSet<Integer> source = reverseIndex.get(userId);
+		HashSet<Integer> source = regularIndex.get(userId);
 		if (source == null) {
 			return null;
 		}
-		double sourceLength = (double)source.size();
-		List<AttributeObject> topTargets = new ArrayList<AttributeObject>();
-		for (Map.Entry<Integer, HashSet<Integer>> me : reverseIndex.entrySet()) {
-			int targetUserId = me.getKey();
-			if (userId == targetUserId) {
+		
+		HashMap<Integer, Integer> hm = new HashMap<Integer, Integer>();
+		for (Integer friend : source) {
+			HashSet<Integer> target = reverseIndex.get(friend);
+			if (target == null) {
 				continue;
 			}
-			HashSet<Integer> target = me.getValue();
-			HashSet<Integer> hmSource = target.size() < source.size() ? target : source;
-			HashSet<Integer> hmTarget = target.size() < source.size() ? source : target;
-			double numCommon = 0.0;
-			for (Integer index : hmSource) {
-				if (hmTarget.contains(index)) {
-					numCommon += 1.0;
+			
+			for (Integer backwdFriend : target) {
+				if (source.contains(backwdFriend) || userId == backwdFriend) {
+					continue;
+				}
+				Integer count = hm.get(backwdFriend);
+				if (count == null) {
+					hm.put(backwdFriend, 1);
+				}
+				else {
+					hm.put(backwdFriend, count + 1);
 				}
 			}
-			
-			double jaccard = numCommon > 0.0 ? numCommon / (target.size() + sourceLength - numCommon) : 0.0;
-			if (jaccard > 0.0) {
-				topTargets.add(new AttributeObject(targetUserId, jaccard));
-			}
-		}
-		Collections.sort(topTargets);
-		
-		source = regularIndex.get(userId);
-		List<Integer> l = new ArrayList<Integer>();
-		for (AttributeObject attObj : topTargets) {
-			int targetId = attObj.getUID();
-			
-			if (source != null && source.contains(targetId)) {
-				continue;
-			}
-			if (userId == targetId) {
-				continue;
-			}
-			
-			l.add(targetId);
-			
-			if (l.size() >= TOP_N_PREDICTED) {
-				break;
-			}
 		}
 		
-		if (l.size() == 0) {
-			return null;
+		List<AttributeObject> l = new ArrayList<AttributeObject>(hm.size());
+		for (Map.Entry<Integer, Integer> me : hm.entrySet()) {
+			l.add(new AttributeObject(me.getKey(), me.getValue()));
 		}
-		int[] predictedFriends = new int[l.size()];
+		Collections.sort(l);
+		
+		int len = l.size() > TOP_N_PREDICTED ? TOP_N_PREDICTED : l.size();
+		int[] predictedFriends = new int[len];
 		int k = 0;
-		for (Integer targetId : l) {
-			predictedFriends[k] = targetId;
+		for (AttributeObject attObj : l.subList(0, len)) {
+			predictedFriends[k] = attObj.getUID();
 			
 			k ++;
 		}
@@ -143,7 +127,7 @@ public class InboundJaccardModel extends Model {
 	public static void main(String[] args) {
 		
 		if (args.length != 3) {
-			System.err.println("Usage: InboundJaccardModel trainingDataFile testDataFile predictionsFile");
+			System.err.println("Usage: BackwardFriendsOfFriends trainingDataFile testDataFile predictionsFile");
 			System.exit(-1);
 		}
 		
@@ -151,12 +135,15 @@ public class InboundJaccardModel extends Model {
 		String testData = args[1];
 		String predictions = args[2];
 		
-		InboundJaccardModel model = new InboundJaccardModel();
+		BackwardFriendsOfFriends model = new BackwardFriendsOfFriends();
 		model.setDataFile(new File(trainingData));
 		
 		model.train();
 		
-		model.writePredictions(new File(predictions), new File(testData));
+		File predictionsFile = new File(predictions);
+		model.writePredictions(predictionsFile, new File(testData));
+		
+		File predictionsTop10File = new File(predictions + "_top10.txt");
+		BackwardFriendsOfFriends.chooseTop10Predictions(predictionsFile, predictionsTop10File);
 	}
 }
-

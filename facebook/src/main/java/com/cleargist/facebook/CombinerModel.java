@@ -112,16 +112,21 @@ public class CombinerModel extends Model {
 	
 	public static void main(String[] args) {
 		String combinedSystem1 = "c:\\kaggle\\ReciprocalWithScorePredictions.csv.gz";
-		String combinedSystem2 = "c:\\kaggle\\JaccardPredictions_014087.csv.gz";
+		String combinedSystem2 = "c:\\kaggle\\submissions\\JaccardPredictions_014087.csv.gz";
 		String combinedSystem3 = "c:\\kaggle\\FriendOfFriendsPredictions.csv.gz";
-		double[] scores = {0.6199, 0.14087, 0.19340};
+		String combinedSystem4 = "c:\\kaggle\\submissions\\BackwdFOF.csv_top10_017447.txt.gz";
+//		String combinedSystem5 = "c:\\kaggle\\submissions\\InboundJaccard_016432.csv.gz";
+//		double[] scores = {0.6199, 0.14087, 0.19340, 0.1839, 0.16432};
+		double[] scores = {0.6199, 0.14087, 0.19340, 0.17447};
 		
-		File[] combinedSystems = new File[3];
+		File[] combinedSystems = new File[scores.length];
 		combinedSystems[0] = new File(combinedSystem1);
 		combinedSystems[1] = new File(combinedSystem2);
 		combinedSystems[2] = new File(combinedSystem3);
+		combinedSystems[3] = new File(combinedSystem4);
+//		combinedSystems[4] = new File(combinedSystem5);
 		String testData = "c:\\kaggle\\test.csv";
-		String predictions = "c:\\kaggle\\CombinedPredictions_Jaccard_FOF_BackwardLinks.csv";
+		String predictions = "c:\\kaggle\\Combined.csv";
 		
 		CombinerModel model = new CombinerModel();
 		model.setLength(50);

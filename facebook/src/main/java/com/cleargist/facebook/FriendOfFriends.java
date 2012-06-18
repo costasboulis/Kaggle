@@ -15,6 +15,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A->B->C => A->C
+ * @author kboulis
+ *
+ */
 public class FriendOfFriends extends Model {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private HashMap<Integer, HashSet<Integer>> regularIndex;

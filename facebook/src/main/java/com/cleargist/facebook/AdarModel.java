@@ -174,11 +174,7 @@ public class AdarModel extends Model {
 	}
 
 	public static void main(String[] args) {
-		/*
-	String trainingData = "c:\\kaggle\\train.csv";
-	String testData = "c:\\kaggle\\test.csv";
-	String predictions = "c:\\kaggle\\Adar.csv";
-	*/
+		
 		if (args.length != 3) {
 			System.err.println("Usage: AdarModel trainingDataFile testDataFile predictionsFile");
 			System.exit(-1);

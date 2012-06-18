@@ -228,6 +228,7 @@ public abstract class Model {
 		BufferedWriter out = null;
 		try {
 			out = new BufferedWriter(new FileWriter(outPredictions));
+			out.write("source_node,destination_nodes" + newline);
 		}
 		catch (Exception ex) {
 			System.err.println("Could not write to file \"" + outPredictions.getAbsolutePath() + "\"");
@@ -238,15 +239,27 @@ public abstract class Model {
 			String line = reader.readLine();
 			while ((line = reader.readLine()) != null) {
 				String[] fields = line.split(",");
+				if (fields.length == 1) {
+					try {
+						out.write(line + newline);
+						out.flush();
+					}
+					catch (Exception ex) {
+						System.err.println("Could not write to file \"" + outPredictions.getAbsolutePath() + "\"");
+						System.exit(-1);
+					}
+					continue;
+				}
+				String[] preds = fields[1].split(" ");
 				StringBuffer sb = new StringBuffer();
 				sb.append(fields[0]); sb.append(",");
-				int normLegth = fields.length - 1;
+				int normLegth = preds.length;
 				int len = normLegth > 10 ? 10 : normLegth;
-				for (int i = 1; i < len; i ++) {
-					if (i > 1) {
+				for (int i = 0; i < len; i ++) {
+					if (i > 0) {
 						sb.append(" "); 
 					}
-					sb.append(fields[i]);
+					sb.append(preds[i]);
 				}
 				sb.append(newline);
 				

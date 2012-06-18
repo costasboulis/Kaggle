@@ -14,6 +14,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * A->B => B->A
+ * @author kboulis
+ *
+ */
 public class ReciprocalWithScoreModel extends Model {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 	private HashMap<Integer, List<Integer>> reverseIndex;

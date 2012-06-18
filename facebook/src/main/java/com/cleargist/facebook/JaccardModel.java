@@ -120,7 +120,7 @@ public class JaccardModel extends Model {
 	}
 	
 	public static void main(String[] args) {
-		
+	
 		if (args.length != 3) {
 			System.err.println("Usage: JaccardModel trainingDataFile testDataFile predictionsFile");
 			System.exit(-1);
