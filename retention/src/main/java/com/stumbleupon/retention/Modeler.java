@@ -187,12 +187,20 @@ public class Modeler {
 			double avgRecall = avgCurve[1][i] / (double)numFolds;
 			try {
 				writer.write(avgPrecision + ";" + avgRecall + newline);
+				writer.flush();
 			}
 			catch (Exception ex) {
 				logger.error("Could not write to file " + results.getAbsolutePath());
 				return;
 			}
-			
+		}
+		
+		try {
+			writer.close();
+		}
+		catch (Exception ex) {
+			logger.error("Could not write to file " + results.getAbsolutePath());
+			return;
 		}
 	}
 	
