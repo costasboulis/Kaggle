@@ -271,7 +271,7 @@ public class FeatureCreator {
 		return attributes;
 	}
 	
-	public void writeData(Instances instances, File file) {
+	public static void writeData(Instances instances, File file) {
 		ArffSaver saver = new ArffSaver();
     	saver.setInstances(instances);
     	try {
@@ -279,7 +279,7 @@ public class FeatureCreator {
         	saver.writeBatch();
     	}
     	catch (Exception ex) {
-    		logger.error("Could not write to file " + file.getAbsolutePath());
+    		System.err.println("Could not write to file " + file.getAbsolutePath());
     		return;
     	}	
 	}
